@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlayRoom Core Example</title>
+    <style>
+      body {
+        font-family: Segoe UI, sans-serif;
+        margin: 0;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: #f8fafc;
+        height: 100svh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="playroom-browser"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@play-room/quizz": "../node_modules/@play-room/quizz/dist/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="./room-init.js"></script>
+  </body>
+</html>

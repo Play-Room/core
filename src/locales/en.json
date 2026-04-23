@@ -1,0 +1,21 @@
+{
+  "title": "PlayRoom",
+  "subtitle": "Take five, reset your mind, and jump back in when you are ready.",
+  "createdBy": "Created by ZPMLabs",
+  "searchPlaceholder": "Search games",
+  "activeLabel": "Active:",
+  "restoreGame": "Restore active game",
+  "openModal": "Open Modal",
+  "openInline": "Open Inline",
+  "fullscreen": "Fullscreen",
+  "minimize": "Minimize",
+  "close": "Close",
+  "noGames": "No games match current filters.",
+  "tapToLaunch": "Tap to launch",
+  "language": "Language",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "english": "English",
+  "serbian": "Српски"
+}

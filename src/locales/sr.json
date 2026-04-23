@@ -1,0 +1,21 @@
+{
+  "title": "PlayRoom",
+  "subtitle": "Predahni kratko, osveži fokus i vrati se kada si spreman.",
+  "createdBy": "Napravio ZPMLabs",
+  "searchPlaceholder": "Pretraži igre",
+  "activeLabel": "Aktivno:",
+  "restoreGame": "Vrati aktivnu igru",
+  "openModal": "Otvori modal",
+  "openInline": "Otvori inline",
+  "fullscreen": "Ceo ekran",
+  "minimize": "Umanji",
+  "close": "Zatvori",
+  "noGames": "Nema igara za trenutno izabrane filtere.",
+  "tapToLaunch": "Pokreni igru",
+  "language": "Jezik",
+  "theme": "Tema",
+  "light": "Svetla",
+  "dark": "Tamna",
+  "english": "English",
+  "serbian": "Српски"
+}

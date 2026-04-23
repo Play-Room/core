@@ -1,0 +1,29 @@
+{
+  "name": "@play-room/core",
+  "version": "0.1.0",
+  "description": "PlayRoom core package for registering and launching independent games",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node ./scripts/copy-assets.mjs",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "game",
+    "hub",
+    "plugin",
+    "play-room"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@play-room/quizz": "^0.1.2"
+  }
+}
