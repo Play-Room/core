@@ -2,7 +2,7 @@ import { createQuizzMetadataDefinition } from "@play-room/quizz";
 
 export function registerExampleGames(
   playRoom,
-  { locale = "en", theme = "light", subscribeLocale, subscribeTheme } = {}
+  { locale = "en", theme = "light", subscribeLocale, subscribeTheme, config = {} } = {}
 ) {
   playRoom.registerGame({
     game: createQuizzMetadataDefinition(),

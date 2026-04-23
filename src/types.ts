@@ -159,3 +159,7 @@ export interface PlayRoomApi {
   setTheme(theme: PlayRoomTheme): void;
   subscribeTheme(listener: (theme: PlayRoomTheme) => void): () => void;
 }
+
+export interface PlayRoomRegistrationApi extends PlayRoomApi {
+  registerGame<GameConfig = Record<string, unknown>>(registration: GameRegistration<GameConfig>): unknown;
+}

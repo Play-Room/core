@@ -17,6 +17,87 @@ interface RegisteredGameInternal {
   config: Record<string, unknown>;
 }
 
+const DEFAULT_PLAYROOM_OPTIONS: PlayRoomOptions = {
+  browserStartMode: "modal",
+  launcher: {
+    mode: "floating",
+    position: "bottom-right",
+    panelWidth: "min(520px, calc(100vw - 2rem))",
+    panelHeight: "min(78vh, 760px)",
+    startOpen: false
+  },
+  persistence: {
+    enabled: true,
+    storageKey: "playroom:floating-demo"
+  },
+  resizableModal: {
+    enabled: true,
+    size: {
+      width: {
+        min: "420px",
+        base: "min(940px, 96vw)",
+        max: "98vw"
+      },
+      height: {
+        min: "320px",
+        base: "80vh",
+        max: "96vh"
+      }
+    }
+  },
+  localeOptions: [
+    { value: "en", label: "English" },
+    { value: "sr", label: "Српски" }
+  ],
+  locale: "en",
+  theme: "light",
+  showLocaleSwitcher: true,
+  showThemeSwitcher: true,
+  themeColors: {
+    primary: "#0f766e",
+    secondary: "#475569"
+  }
+};
+
+function mergePlayRoomOptions(options: PlayRoomOptions = {}): PlayRoomOptions {
+  const defaultResizableSize = DEFAULT_PLAYROOM_OPTIONS.resizableModal?.size;
+  const customResizableSize = options.resizableModal?.size;
+
+  return {
+    ...DEFAULT_PLAYROOM_OPTIONS,
+    ...options,
+    launcher: {
+      ...DEFAULT_PLAYROOM_OPTIONS.launcher,
+      ...options.launcher
+    },
+    persistence: {
+      ...DEFAULT_PLAYROOM_OPTIONS.persistence,
+      ...options.persistence
+    },
+    resizableModal: {
+      ...DEFAULT_PLAYROOM_OPTIONS.resizableModal,
+      ...options.resizableModal,
+      size: {
+        ...defaultResizableSize,
+        ...customResizableSize,
+        width: {
+          ...defaultResizableSize?.width,
+          ...customResizableSize?.width
+        },
+        height: {
+          ...defaultResizableSize?.height,
+          ...customResizableSize?.height
+        }
+      }
+    },
+    localeOptions: options.localeOptions ?? DEFAULT_PLAYROOM_OPTIONS.localeOptions,
+    themeColors: {
+      ...DEFAULT_PLAYROOM_OPTIONS.themeColors,
+      ...options.themeColors
+    }
+  };
+}
+
 function toCssMeasurement(value: string | number | undefined, fallback: string): string {
   if (typeof value === "number") {
     return `${value}px`;
@@ -54,10 +135,10 @@ export class PlayRoom implements PlayRoomApi {
   private readonly themeListeners = new Set<(theme: "light" | "dark") => void>();
 
   constructor(options: PlayRoomOptions = {}) {
-    this.options = options;
-    this.uiAdapter = options.uiAdapter;
-    this.currentLocale = normalizeLocale(options.locale);
-    this.currentTheme = normalizeTheme(options.theme);
+    this.options = mergePlayRoomOptions(options);
+    this.uiAdapter = this.options.uiAdapter;
+    this.currentLocale = normalizeLocale(this.options.locale);
+    this.currentTheme = normalizeTheme(this.options.theme);
   }
 
   getLocale(): string {
