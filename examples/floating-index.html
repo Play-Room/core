@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlayRoom Floating Launcher Example</title>
+    <style>
+      body {
+        font-family: Segoe UI, sans-serif;
+        margin: 0;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: #f8fafc;
+        min-height: 100svh;
+      }
+
+      .content {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      .content h1 {
+        margin: 0 0 0.5rem;
+      }
+
+      .content p {
+        color: #334155;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <h1>Floating PlayRoom Demo</h1>
+      <p>
+        Use the floating PlayRoom button in the corner. Open a game in modal, resize/move/minimize it,
+        then reload this page to see state restoration.
+      </p>
+    </div>
+
+    <div id="playroom-browser"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@play-room/quizz": "../node_modules/@play-room/quizz/dist/index.js"
+        }
+      }
+    </script>
+    <script type="module" src="./floating-room-init.js"></script>
+  </body>
+</html>

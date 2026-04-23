@@ -169,6 +169,8 @@ export class PlayRoom implements PlayRoomApi {
         defaultStartMode: this.options.browserStartMode,
         draggableModal: this.options.draggableModal,
         resizableModal: this.options.resizableModal,
+        launcher: this.options.launcher,
+        persistence: this.options.persistence,
         locale: this.getLocale(),
         localeOptions: this.options.localeOptions,
         localeMessages: this.options.localeMessages,

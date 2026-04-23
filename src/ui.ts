@@ -2,11 +2,15 @@ import {
   GameCatalogResult,
   GameSession,
   HubUiAdapter,
+  PlayRoomFloatingLauncherConfig,
+  PlayRoomFloatingPosition,
+  PlayRoomLauncherMode,
   PlayRoomLocale,
   PlayRoomLocaleMessages,
   PlayRoomLocaleOption,
   PlayRoomTheme,
   PlayRoomThemeColors,
+  PlayRoomUiPersistenceConfig,
   RegisteredGameMeta,
   ResizableModalConfig
 } from "./types.js";
@@ -15,6 +19,8 @@ interface BasicListUiAdapterOptions {
   defaultStartMode?: "inline" | "modal";
   draggableModal?: boolean;
   resizableModal?: ResizableModalConfig;
+  launcher?: PlayRoomFloatingLauncherConfig;
+  persistence?: PlayRoomUiPersistenceConfig;
   locale?: PlayRoomLocale;
   localeOptions?: PlayRoomLocaleOption[];
   localeMessages?: PlayRoomLocaleMessages;
@@ -38,6 +44,20 @@ interface ActiveGameRuntime {
   modalPanel: HTMLElement | null;
   modalContent: HTMLElement | null;
   applyModalTheme: (() => void) | null;
+}
+
+interface PersistedUiState {
+  activeGameId?: string;
+  mode?: "inline" | "modal";
+  minimized?: boolean;
+  modal?: {
+    width?: string;
+    height?: string;
+    left?: string;
+    top?: string;
+    fullscreen?: boolean;
+  };
+  floatingOpen?: boolean;
 }
 
 const CORE_TRANSLATIONS: PlayRoomLocaleMessages = {
@@ -106,12 +126,32 @@ function normalizeTheme(value: string | undefined): PlayRoomTheme {
   return value === "dark" ? "dark" : "light";
 }
 
+function normalizeFloatingPosition(value: string | undefined): PlayRoomFloatingPosition {
+  const allowed: PlayRoomFloatingPosition[] = [
+    "top-left",
+    "top-center",
+    "top-right",
+    "middle-left",
+    "middle-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right"
+  ];
+  return allowed.includes(value as PlayRoomFloatingPosition)
+    ? (value as PlayRoomFloatingPosition)
+    : "bottom-right";
+}
+
 export class BasicListUiAdapter implements HubUiAdapter {
   private readonly defaultStartMode: "inline" | "modal";
 
   private readonly draggableModal: boolean;
 
   private readonly resizableModal: ResizableModalConfig;
+
+  private readonly launcher: PlayRoomFloatingLauncherConfig;
+
+  private readonly persistence: PlayRoomUiPersistenceConfig;
 
   private readonly baseLocale: PlayRoomLocale;
 
@@ -139,6 +179,8 @@ export class BasicListUiAdapter implements HubUiAdapter {
     this.defaultStartMode = options.defaultStartMode ?? "inline";
     this.draggableModal = options.draggableModal ?? true;
     this.resizableModal = options.resizableModal ?? {};
+    this.launcher = options.launcher ?? {};
+    this.persistence = options.persistence ?? { enabled: true, storageKey: "playroom:ui-state" };
     this.baseLocale = options.locale ?? "en";
     this.localeOptions = options.localeOptions ?? [];
     this.localeMessages = {
@@ -164,6 +206,13 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
     let currentLocale = normalizeLocale(this.baseLocale);
     let currentTheme = normalizeTheme(this.baseTheme);
+    const launcherMode: PlayRoomLauncherMode = this.launcher.mode === "floating" ? "floating" : "inline";
+    const floatingPosition = normalizeFloatingPosition(this.launcher.position);
+    const persistenceEnabled = this.persistence.enabled !== false;
+    const persistenceKey = this.persistence.storageKey ?? "playroom:ui-state";
+    let floatingOpen = this.launcher.startOpen ?? true;
+    let floatingPanel: HTMLElement | null = null;
+    let floatingButton: HTMLButtonElement | null = null;
 
     const resolvedLocaleOptions = (() => {
       const configured = this.localeOptions.length > 0
@@ -205,6 +254,107 @@ export class BasicListUiAdapter implements HubUiAdapter {
       return key;
     };
 
+    const readPersistedState = (): PersistedUiState => {
+      if (!persistenceEnabled || typeof localStorage === "undefined") {
+        return {};
+      }
+
+      try {
+        const raw = localStorage.getItem(persistenceKey);
+        if (!raw) {
+          return {};
+        }
+        const parsed = JSON.parse(raw) as PersistedUiState;
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch {
+        return {};
+      }
+    };
+
+    const writePersistedState = (state: PersistedUiState): void => {
+      if (!persistenceEnabled || typeof localStorage === "undefined") {
+        return;
+      }
+
+      try {
+        localStorage.setItem(persistenceKey, JSON.stringify(state));
+      } catch {
+        // Ignore storage errors.
+      }
+    };
+
+    const applyFloatingPlacement = (button: HTMLButtonElement, panel: HTMLElement): void => {
+      const gap = 16;
+      const offset = 56;
+
+      button.style.top = "";
+      button.style.bottom = "";
+      button.style.left = "";
+      button.style.right = "";
+      button.style.transform = "";
+
+      panel.style.top = "";
+      panel.style.bottom = "";
+      panel.style.left = "";
+      panel.style.right = "";
+      panel.style.transform = "";
+
+      if (floatingPosition === "top-left") {
+        button.style.top = `${gap}px`;
+        button.style.left = `${gap}px`;
+        panel.style.top = `${offset}px`;
+        panel.style.left = `${gap}px`;
+      } else if (floatingPosition === "top-center") {
+        button.style.top = `${gap}px`;
+        button.style.left = "50%";
+        button.style.transform = "translateX(-50%)";
+        panel.style.top = `${offset}px`;
+        panel.style.left = "50%";
+        panel.style.transform = "translateX(-50%)";
+      } else if (floatingPosition === "top-right") {
+        button.style.top = `${gap}px`;
+        button.style.right = `${gap}px`;
+        panel.style.top = `${offset}px`;
+        panel.style.right = `${gap}px`;
+      } else if (floatingPosition === "middle-left") {
+        button.style.top = "50%";
+        button.style.left = `${gap}px`;
+        button.style.transform = "translateY(-50%)";
+        panel.style.top = "50%";
+        panel.style.left = `${offset}px`;
+        panel.style.transform = "translateY(-50%)";
+      } else if (floatingPosition === "middle-right") {
+        button.style.top = "50%";
+        button.style.right = `${gap}px`;
+        button.style.transform = "translateY(-50%)";
+        panel.style.top = "50%";
+        panel.style.right = `${offset}px`;
+        panel.style.transform = "translateY(-50%)";
+      } else if (floatingPosition === "bottom-left") {
+        button.style.bottom = `${gap}px`;
+        button.style.left = `${gap}px`;
+        panel.style.bottom = `${offset}px`;
+        panel.style.left = `${gap}px`;
+      } else if (floatingPosition === "bottom-center") {
+        button.style.bottom = `${gap}px`;
+        button.style.left = "50%";
+        button.style.transform = "translateX(-50%)";
+        panel.style.bottom = `${offset}px`;
+        panel.style.left = "50%";
+        panel.style.transform = "translateX(-50%)";
+      } else {
+        button.style.bottom = `${gap}px`;
+        button.style.right = `${gap}px`;
+        panel.style.bottom = `${offset}px`;
+        panel.style.right = `${gap}px`;
+      }
+    };
+
+    const persistedState = readPersistedState();
+    if (typeof persistedState.floatingOpen === "boolean") {
+      floatingOpen = persistedState.floatingOpen;
+    }
+
     container.innerHTML = "";
     container.style.position = "relative";
     container.style.width = "100%";
@@ -223,6 +373,30 @@ export class BasicListUiAdapter implements HubUiAdapter {
     const selectedTags = new Set<string>();
     let isInlineFullscreen = false;
     let isModalFullscreen = false;
+
+    const persistCurrentState = (): void => {
+      const next: PersistedUiState = {
+        floatingOpen
+      };
+
+      if (activeGame) {
+        next.activeGameId = activeGame.meta.id;
+        next.mode = activeGame.mode;
+        next.minimized = activeGame.minimized;
+
+        if (activeGame.mode === "modal" && activeGame.modalPanel) {
+          next.modal = {
+            width: activeGame.modalPanel.style.width || undefined,
+            height: activeGame.modalPanel.style.height || undefined,
+            left: activeGame.modalPanel.style.left || undefined,
+            top: activeGame.modalPanel.style.top || undefined,
+            fullscreen: isModalFullscreen
+          };
+        }
+      }
+
+      writePersistedState(next);
+    };
 
     const heading = document.createElement("div");
     heading.style.display = "flex";
@@ -271,6 +445,8 @@ export class BasicListUiAdapter implements HubUiAdapter {
     controlsRow.style.alignItems = "center";
     controlsRow.style.gap = "0.4rem";
     controlsRow.style.flexWrap = "wrap";
+    controlsRow.style.justifyContent = "flex-end";
+    controlsRow.style.marginLeft = "auto";
 
     const localeSelect = document.createElement("select");
     localeSelect.style.border = "1px solid var(--pr-border)";
@@ -444,6 +620,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
         panel.style.maxHeight = "100dvh";
         panel.style.minHeight = "100dvh";
         panel.style.borderRadius = "0";
+        persistCurrentState();
         return;
       }
 
@@ -463,6 +640,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
       panel.style.maxHeight = toCssMeasurement(this.resizableModal.size?.height?.max, "90vh");
       panel.style.minHeight = toCssMeasurement(this.resizableModal.size?.height?.min, "240px");
       panel.style.borderRadius = "14px";
+      persistCurrentState();
     };
 
     const createIconActionButton = (
@@ -793,8 +971,18 @@ export class BasicListUiAdapter implements HubUiAdapter {
         });
 
         window.addEventListener("mouseup", () => {
+          if (dragging) {
+            persistCurrentState();
+          }
           dragging = false;
         });
+      }
+
+      if (typeof ResizeObserver !== "undefined") {
+        const modalResizeObserver = new ResizeObserver(() => {
+          persistCurrentState();
+        });
+        modalResizeObserver.observe(panel);
       }
 
       runtime.modalOverlay = overlay;
@@ -872,6 +1060,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
       }
 
       showActiveDock();
+      persistCurrentState();
     };
 
     const renderInModal = (runtime: ActiveGameRuntime): void => {
@@ -896,6 +1085,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
       inlineOverlay.style.display = "none";
       showActiveDock();
+      persistCurrentState();
     };
 
     const minimizeActive = (): void => {
@@ -909,6 +1099,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
         activeGame.modalOverlay.style.display = "none";
       }
       showActiveDock();
+      persistCurrentState();
     };
 
     const reopenActive = (): void => {
@@ -956,9 +1147,13 @@ export class BasicListUiAdapter implements HubUiAdapter {
       }
       showActiveDock();
       renderList();
+      persistCurrentState();
     };
 
-    const launchGame = async (meta: RegisteredGameMeta): Promise<void> => {
+    const launchGame = async (
+      meta: RegisteredGameMeta,
+      preferredMode: "inline" | "modal" = "inline"
+    ): Promise<void> => {
       if (activeGame?.meta.id === meta.id) {
         reopenActive();
         return;
@@ -977,7 +1172,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
         meta,
         host,
         session: null,
-        mode: this.defaultStartMode,
+        mode: preferredMode,
         minimized: false,
         modalOverlay: null,
         modalPanel: null,
@@ -987,7 +1182,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
       activeGame = runtime;
 
-      if (this.defaultStartMode === "modal") {
+      if (preferredMode === "modal") {
         renderInModal(runtime);
       } else {
         renderInInline(runtime);
@@ -1001,6 +1196,69 @@ export class BasicListUiAdapter implements HubUiAdapter {
       }
 
       showActiveDock();
+      persistCurrentState();
+    };
+
+    const applyPersistedModalGeometry = (runtime: ActiveGameRuntime, state: PersistedUiState): void => {
+      if (!runtime.modalOverlay || !runtime.modalPanel || !state.modal) {
+        return;
+      }
+
+      const panel = runtime.modalPanel;
+      const overlay = runtime.modalOverlay;
+      const modalState = state.modal;
+
+      if (modalState.fullscreen) {
+        if (!isModalFullscreen) {
+          toggleModalFullscreen();
+        }
+        return;
+      }
+
+      if (modalState.width) {
+        panel.style.width = modalState.width;
+      }
+      if (modalState.height) {
+        panel.style.height = modalState.height;
+      }
+      if (modalState.left || modalState.top) {
+        panel.style.position = "fixed";
+        panel.style.margin = "0";
+        panel.style.left = modalState.left ?? panel.style.left;
+        panel.style.top = modalState.top ?? panel.style.top;
+        panel.style.transform = "none";
+        overlay.style.placeItems = "start";
+      }
+    };
+
+    const restorePersistedGame = async (): Promise<void> => {
+      if (!persistedState.activeGameId) {
+        return;
+      }
+
+      const restoreMeta = catalog().items.find((item) => item.id === persistedState.activeGameId);
+      if (!restoreMeta) {
+        writePersistedState({ floatingOpen });
+        return;
+      }
+
+      const restoreMode: "inline" | "modal" = persistedState.mode === "modal" ? "modal" : "inline";
+      await launchGame(restoreMeta, restoreMode);
+
+      if (!activeGame) {
+        return;
+      }
+
+      if (persistedState.mode === "modal") {
+        renderInModal(activeGame);
+        applyPersistedModalGeometry(activeGame, persistedState);
+      } else {
+        renderInInline(activeGame);
+      }
+
+      if (persistedState.minimized) {
+        minimizeActive();
+      }
     };
 
     const applyGridColumns = (): void => {
@@ -1174,6 +1432,62 @@ export class BasicListUiAdapter implements HubUiAdapter {
       }
     };
 
+    const setupFloatingLauncher = (): void => {
+      if (launcherMode !== "floating" || typeof document === "undefined") {
+        return;
+      }
+
+      const panel = document.createElement("section");
+      panel.style.position = "fixed";
+      panel.style.zIndex = "9988";
+      panel.style.width = toCssMeasurement(this.launcher.panelWidth, "min(520px, calc(100vw - 2rem))");
+      panel.style.height = toCssMeasurement(this.launcher.panelHeight, "min(78vh, 760px)");
+      panel.style.maxWidth = "calc(100vw - 2rem)";
+      panel.style.maxHeight = "calc(100vh - 5rem)";
+      panel.style.minWidth = "320px";
+      panel.style.minHeight = "300px";
+      panel.style.border = "1px solid var(--pr-border)";
+      panel.style.borderRadius = "14px";
+      panel.style.background = "var(--pr-surface)";
+      panel.style.boxShadow = "0 16px 38px rgba(15, 23, 42, 0.2)";
+      panel.style.overflow = "hidden";
+      panel.style.display = floatingOpen ? "block" : "none";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "PlayRoom";
+      button.title = t("title");
+      button.style.position = "fixed";
+      button.style.zIndex = "9989";
+      button.style.border = "1px solid var(--pr-border-strong)";
+      button.style.background = "var(--pr-primary)";
+      button.style.color = "#ffffff";
+      button.style.borderRadius = "999px";
+      button.style.padding = "0.55rem 0.9rem";
+      button.style.fontSize = "0.82rem";
+      button.style.fontWeight = "700";
+      button.style.cursor = "pointer";
+      button.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.28)";
+
+      button.addEventListener("click", () => {
+        floatingOpen = !floatingOpen;
+        panel.style.display = floatingOpen ? "block" : "none";
+        persistCurrentState();
+      });
+
+      applyFloatingPlacement(button, panel);
+
+      container.style.height = "100%";
+      container.style.minHeight = "0";
+      container.style.padding = "0.65rem";
+      panel.appendChild(container);
+      document.body.appendChild(panel);
+      document.body.appendChild(button);
+
+      floatingPanel = panel;
+      floatingButton = button;
+    };
+
     activeDockButton.addEventListener("click", () => {
       reopenActive();
     });
@@ -1223,5 +1537,8 @@ export class BasicListUiAdapter implements HubUiAdapter {
     container.appendChild(activeDock);
     container.appendChild(grid);
     container.appendChild(inlineOverlay);
+
+    setupFloatingLauncher();
+    void restorePersistedGame();
   }
 }

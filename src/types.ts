@@ -34,6 +34,31 @@ export interface PlayRoomThemeColors {
   secondary?: string;
 }
 
+export type PlayRoomLauncherMode = "inline" | "floating";
+
+export type PlayRoomFloatingPosition =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
+export interface PlayRoomFloatingLauncherConfig {
+  mode?: PlayRoomLauncherMode;
+  position?: PlayRoomFloatingPosition;
+  panelWidth?: CssMeasurement;
+  panelHeight?: CssMeasurement;
+  startOpen?: boolean;
+}
+
+export interface PlayRoomUiPersistenceConfig {
+  enabled?: boolean;
+  storageKey?: string;
+}
+
 export interface GameInstance {
   mount?(container: HTMLElement): MaybePromise<void>;
   unmount?(): MaybePromise<void>;
@@ -105,6 +130,8 @@ export interface PlayRoomOptions {
   browserStartMode?: "inline" | "modal";
   draggableModal?: boolean;
   resizableModal?: ResizableModalConfig;
+  launcher?: PlayRoomFloatingLauncherConfig;
+  persistence?: PlayRoomUiPersistenceConfig;
   locale?: PlayRoomLocale;
   localeOptions?: PlayRoomLocaleOption[];
   localeMessages?: PlayRoomLocaleMessages;
