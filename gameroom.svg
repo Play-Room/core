@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Decorative stars moved higher -->
+  <path d="M118 68L123.5 84.5L140 90L123.5 95.5L118 112L112.5 95.5L96 90L112.5 84.5L118 68Z" fill="#49D7A1"/>
+  <path d="M256 36L267.755 71.2447H304.819L274.832 92.5103L286.588 127.755L256 106.49L225.412 127.755L237.168 92.5103L207.181 71.2447H244.245L256 36Z" fill="#2F73F2"/>
+  <path d="M394 68L399.5 84.5L416 90L399.5 95.5L394 112L388.5 95.5L372 90L388.5 84.5L394 68Z" fill="#F6C12A"/>
+
+  <!-- Controller body -->
+  <path id="controller-body" d="M138 145C111 145 88 156 73 180C56 207 44 253 42 319C40 378 58 424 92 432C121 439 146 406 180 341C186 331 194 326 204 326H308C318 326 326 331 332 341C366 406 391 439 420 432C454 424 472 378 470 319C468 253 456 207 439 180C424 156 401 145 374 145H138Z" fill="#112757"/>
+
+  <!-- Top bumpers moved inward -->
+  <path id="left-bumper" d="M122 145C126 132 138 124 154 124H186C202 124 212 132 216 145H122Z" fill="#112757"/>
+  <path id="right-bumper" d="M296 145C300 132 310 124 326 124H358C374 124 386 132 390 145H296Z" fill="#112757"/>
+
+  <!-- D-pad -->
+  <rect x="95" y="202" width="96" height="36" rx="10" fill="#F3F4F6"/>
+  <rect x="125" y="172" width="36" height="96" rx="10" fill="#F3F4F6"/>
+
+  <!-- Face buttons -->
+  <circle cx="382" cy="187" r="20" fill="#49D7A1"/>
+  <circle cx="424" cy="227" r="20" fill="#FF5757"/>
+  <circle cx="382" cy="269" r="20" fill="#F6C12A"/>
+  <circle cx="340" cy="227" r="20" fill="#2F73F2"/>
+
+  <!-- Analog sticks -->
+  <circle id="left-stick" cx="196" cy="310" r="30" fill="#112757" stroke="#30467C" stroke-width="14"/>
+  <circle id="right-stick" cx="316" cy="310" r="30" fill="#112757" stroke="#30467C" stroke-width="14"/>
+</svg>

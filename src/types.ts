@@ -52,6 +52,7 @@ export interface PlayRoomFloatingLauncherConfig {
   panelWidth?: CssMeasurement;
   panelHeight?: CssMeasurement;
   startOpen?: boolean;
+  pulse?: boolean;
 }
 
 export interface PlayRoomUiPersistenceConfig {

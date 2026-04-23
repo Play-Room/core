@@ -55,6 +55,12 @@ const playRoom = new PlayRoom({
   themeColors: {
     primary: "#0f766e",
     secondary: "#475569"
+  },
+  launcher: {
+    mode: "floating",
+    position: "bottom-right",
+    startOpen: false,
+    pulse: true
   }
 });
 ```

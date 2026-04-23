@@ -24,7 +24,8 @@ const DEFAULT_PLAYROOM_OPTIONS: PlayRoomOptions = {
     position: "bottom-right",
     panelWidth: "min(520px, calc(100vw - 2rem))",
     panelHeight: "min(78vh, 760px)",
-    startOpen: false
+    startOpen: false,
+    pulse: true
   },
   persistence: {
     enabled: true,

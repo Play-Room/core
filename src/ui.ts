@@ -285,7 +285,7 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
     const applyFloatingPlacement = (button: HTMLButtonElement, panel: HTMLElement): void => {
       const gap = 16;
-      const offset = 56;
+      const offset = 80;
 
       button.style.top = "";
       button.style.bottom = "";
@@ -703,6 +703,38 @@ export class BasicListUiAdapter implements HubUiAdapter {
       button.setAttribute("aria-label", label);
     };
 
+    const applyFloatingButtonTheme = (): void => {
+      if (!floatingButton) {
+        return;
+      }
+
+      const primary = this.themeColors.primary ?? "#1d4ed8";
+      const secondary = this.themeColors.secondary ?? "#64748b";
+      const bgColor = currentTheme === "dark" ? "#111b2f" : "#ffffff";
+
+      floatingButton.style.background = bgColor;
+
+      const svg = floatingButton.querySelector("svg");
+      if (!svg) {
+        return;
+      }
+
+      for (const id of ["pr-fb-body", "pr-fb-lbump", "pr-fb-rbump"]) {
+        const el = svg.querySelector(`#${id}`) as SVGElement | null;
+        if (el) {
+          el.setAttribute("fill", primary);
+        }
+      }
+
+      for (const id of ["pr-fb-lstick", "pr-fb-rstick"]) {
+        const el = svg.querySelector(`#${id}`) as SVGElement | null;
+        if (el) {
+          el.setAttribute("fill", primary);
+          el.setAttribute("stroke", secondary);
+        }
+      }
+    };
+
     const applyThemeTokens = (): void => {
       if (currentTheme === "dark") {
         container.style.setProperty("--pr-bg", "#0b1220");
@@ -742,6 +774,8 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
       container.style.background = "var(--pr-bg)";
       grid.style.background = "transparent";
+
+      applyFloatingButtonTheme();
     };
 
     const refreshUiLabels = (): void => {
@@ -1455,19 +1489,55 @@ export class BasicListUiAdapter implements HubUiAdapter {
 
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = "PlayRoom";
       button.title = t("title");
+      button.setAttribute("aria-label", t("title"));
       button.style.position = "fixed";
       button.style.zIndex = "9989";
-      button.style.border = "1px solid var(--pr-border-strong)";
-      button.style.background = "var(--pr-primary)";
-      button.style.color = "#ffffff";
-      button.style.borderRadius = "999px";
-      button.style.padding = "0.55rem 0.9rem";
-      button.style.fontSize = "0.82rem";
-      button.style.fontWeight = "700";
+      button.style.border = "none";
+      button.style.background = "#ffffff";
+      button.style.borderRadius = "50%";
+      button.style.width = "52px";
+      button.style.height = "52px";
+      button.style.padding = "0";
+      button.style.display = "flex";
+      button.style.alignItems = "center";
+      button.style.justifyContent = "center";
       button.style.cursor = "pointer";
       button.style.boxShadow = "0 8px 20px rgba(15, 23, 42, 0.28)";
+      button.style.overflow = "hidden";
+      button.style.lineHeight = "1";
+
+      const primary = this.themeColors.primary ?? "#1d4ed8";
+      const secondary = this.themeColors.secondary ?? "#64748b";
+      button.innerHTML = `<svg width="39" height="39" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style="pointer-events:none;display:block;flex-shrink:0;transform:rotate(-45deg)">
+  <path id="pr-fb-body" d="M138 145C111 145 88 156 73 180C56 207 44 253 42 319C40 378 58 424 92 432C121 439 146 406 180 341C186 331 194 326 204 326H308C318 326 326 331 332 341C366 406 391 439 420 432C454 424 472 378 470 319C468 253 456 207 439 180C424 156 401 145 374 145H138Z" fill="${primary}"/>
+  <path id="pr-fb-lbump" d="M122 145C126 132 138 124 154 124H186C202 124 212 132 216 145H122Z" fill="${primary}"/>
+  <path id="pr-fb-rbump" d="M296 145C300 132 310 124 326 124H358C374 124 386 132 390 145H296Z" fill="${primary}"/>
+  <rect x="95" y="202" width="96" height="36" rx="10" fill="#F3F4F6"/>
+  <rect x="125" y="172" width="36" height="96" rx="10" fill="#F3F4F6"/>
+  <circle cx="382" cy="187" r="20" fill="#49D7A1"/>
+  <circle cx="424" cy="227" r="20" fill="#FF5757"/>
+  <circle cx="382" cy="269" r="20" fill="#F6C12A"/>
+  <circle cx="340" cy="227" r="20" fill="#2F73F2"/>
+  <circle id="pr-fb-lstick" cx="196" cy="310" r="30" fill="${primary}" stroke="${secondary}" stroke-width="14"/>
+  <circle id="pr-fb-rstick" cx="316" cy="310" r="30" fill="${primary}" stroke="${secondary}" stroke-width="14"/>
+</svg>`;
+
+      if (this.launcher.pulse !== false) {
+        const styleId = "pr-floating-pulse-style";
+        if (typeof document !== "undefined" && !document.getElementById(styleId)) {
+          const styleEl = document.createElement("style");
+          styleEl.id = styleId;
+          styleEl.textContent = [
+            "@keyframes pr-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 8px 20px rgba(15,23,42,0.28); } 50% { transform: scale(1.22); box-shadow: 0 14px 36px rgba(15,23,42,0.45); } }",
+            ".pr-floating-pulse { animation: pr-pulse 2.2s ease-in-out infinite; }",
+            ".pr-floating-pulse:hover { animation-play-state: paused; }"
+          ].join("\n");
+          document.head.appendChild(styleEl);
+        }
+
+        button.classList.add("pr-floating-pulse");
+      }
 
       button.addEventListener("click", () => {
         floatingOpen = !floatingOpen;
